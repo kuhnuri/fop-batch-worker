@@ -30,8 +30,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.elovirta.kuhnuri.FileUtils.getExtension;
+import static com.elovirta.kuhnuri.FileUtils.withExtension;
 
 /**
  * Main class to download input, run DITA-OT, and upload output.
@@ -84,7 +88,9 @@ public class Main {
             final List<Path> inputFiles;
             if (Files.isDirectory(in)) {
                 inputDir = in;
-                inputFiles = Files.find(inputDir, Integer.MAX_VALUE, (path, basicFileAttributes) -> path.getFileName().toString().endsWith(".fo"))
+                inputFiles = Files
+                        .find(inputDir, Integer.MAX_VALUE,
+                                (path, basicFileAttributes) -> Objects.equals(getExtension(path), "fo"))
                         .map(inputDir::relativize)
                         .collect(Collectors.toList());
             } else {
@@ -94,7 +100,7 @@ public class Main {
 
             for (Path file : inputFiles) {
                 final Path inPath = inputDir.resolve(file);
-                final Path outPath = outDir.resolve(file);
+                final Path outPath = withExtension(outDir.resolve(file), "pdf");
                 try (InputStream input = Files.newInputStream(inPath);
                      OutputStream output = Files.newOutputStream(outPath)) {
                     final Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, output);
